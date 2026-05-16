@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{{ report_title or "ZeroChills - AI Visibility Report" }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  :root {
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --primary: #3525cd;
+    --primary-soft: #6d5cf7;
+    --primary-tint: #ede9ff;
+    --primary-line: #c4b5fd;
+    --text: #0f172a;
+    --muted: #64748b;
+    --muted-soft: #94a3b8;
+    --paper: #ffffff;
+    --screen: #e8e8e8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: var(--screen);
+    color: var(--text);
+    print-color-adjust: exact;
+  }
+
+  .page-shell {
+    width: var(--page-width);
+    height: var(--page-height);
+    margin: 0 auto;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-shell::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, #e0e0f0 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .deco-circle,
+  .deco-circle-sm {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .deco-circle {
+    top: -16mm;
+    right: -16mm;
+    width: 58mm;
+    height: 58mm;
+    background: linear-gradient(135deg, #ede9ff 0%, #c7d2fe 100%);
+    opacity: 0.5;
+  }
+
+  .deco-circle-sm {
+    bottom: 16mm;
+    left: -8mm;
+    width: 26mm;
+    height: 26mm;
+    background: linear-gradient(135deg, #ede9ff 0%, #a5b4fc 100%);
+    opacity: 0.35;
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #3525cd 0%, #6d5cf7 50%, #a78bfa 100%);
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(297mm - 5px - 18mm);
+    padding: 9mm 13mm 0;
+    overflow: hidden;
+  }
+
+  /* Vertically-centered stack for the hero block after illustrations removed */
+  .hero-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6mm;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 7mm;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.03em;
+  }
+
+  .logo-sub {
+    margin-top: 2px;
+    font-size: 0.55rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .report-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--primary-soft);
+    background: var(--primary-tint);
+    border: 1px solid var(--primary-line);
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+
+  .shield-icon {
+    opacity: 0.55;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 5mm;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary-soft);
+  }
+
+  .hero-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+    display: inline-block;
+  }
+
+  .hero h1 {
+    font-size: 3.4rem;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .hero .accent {
+    color: var(--primary);
+  }
+
+  .hero-sub {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--muted-soft);
+    letter-spacing: 0.01em;
+  }
+
+  .hotel-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: auto;
+    margin: 0 auto 5mm;
+    padding: 10px 28px;
+    border: 1.5px solid var(--primary-line);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+  }
+
+  .prepared-label {
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #a78bfa;
+  }
+
+  .divider-v {
+    width: 1px;
+    height: 28px;
+    background: var(--primary-line);
+  }
+
+  .hotel-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+  }
+
+  .ai-spacer {
+    height: 25mm;
+    flex-shrink: 0;
+  }
+
+  .ai-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-shrink: 0;
+  }
+
+  .ai-circle-wrap img {
+    display: block;
+    width: 260px;
+    height: auto;
+  }
+
+  .ai-platform-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chips-heading {
+    margin-bottom: 4px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted-soft);
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 140px;
+    padding: 7px 13px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* background is set via inline style per platform */
+    background: #3525cd;
+  }
+
+  .chip-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #1e293b;
+  }
+
+  .chip-status {
+    margin-left: auto;
+    white-space: nowrap;
+    font-size: 0.58rem;
+    font-weight: 500;
+    color: var(--muted-soft);
+  }
+
+  .illustrations {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10mm;
+    flex-shrink: 0;
+  }
+
+  .illustrations img {
+    display: block;
+    width: 42%;
+    height: auto;
+  }
+
+  .bottom-banner {
+    position: relative;
+    z-index: 1;
+    padding: 15px 28px;
+    text-align: center;
+    background: linear-gradient(90deg, #2a1fb0 0%, #3525cd 50%, #4f46e5 100%);
+    height: 18mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bottom-banner p {
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  .bottom-banner strong {
+    color: var(--primary-line);
+    font-weight: 700;
+  }
+
+  @media print {
+    body { background: #ffffff; }
+    .page-shell { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="deco-circle"></div>
+    <div class="deco-circle-sm"></div>
+    <div class="top-bar"></div>
+
+    <div class="page-inner">
+      <header class="header">
+        <div class="logo-block">
+          <div class="logo-text">{{ brand_name or "ZeroChills" }}</div>
+          <div class="logo-sub">{{ brand_tagline or "AI Visibility Intelligence for Hotels" }}</div>
+        </div>
+        <div class="header-right">
+          <span class="report-badge">{{ report_period or "April 2025" }} &middot; {{ confidentiality_label or "Confidential" }}</span>
+          <svg class="shield-icon" width="30" height="34" viewBox="0 0 36 44" fill="none" aria-hidden="true">
+            <path d="M18 2L3 8V20C3 29.5 9.5 38.3 18 41C26.5 38.3 33 29.5 33 20V8L18 2Z" stroke="#a78bfa" stroke-width="2" fill="#ede9ff"/>
+            <path d="M12 22L16 26L24 18" stroke="#6d5cf7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </header>
+
+      <div class="hero-stack">
+        <section class="hero">
+          <div class="hero-eyebrow">
+            <span class="dot"></span>
+            {{ hero_eyebrow or "AI-Powered Discovery Report" }}
+            <span class="dot"></span>
+          </div>
+          <h1>{{ hero_title_prefix or "AI" }} <span class="accent">{{ hero_title_accent or "Visibility" }}</span><br/>{{ hero_title_suffix or "Report" }}</h1>
+          <p class="hero-sub">{{ hero_subtitle or "How visible is your hotel in AI-driven travel searches?" }}</p>
+        </section>
+
+        <div class="hotel-card">
+          <span class="prepared-label">{{ prepared_label or "Prepared for" }}</span>
+          <div class="divider-v"></div>
+          <span class="hotel-name">{{ hotel_name or "N/A" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-banner">
+      <p>
+        {{ footer_intro or "This report analyzes your hotel's visibility across leading AI platforms and identifies" }}<br/>
+        <strong>{{ footer_highlight or "opportunities to improve discovery, ranking, and bookings." }}</strong>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

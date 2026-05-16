@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{{ page_title or "ZeroChills | AI Visibility Report" }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  :root {
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --primary: #3525cd;
+    --primary-container: #4f46e5;
+    --primary-fixed: #e2dfff;
+    --surface: #f8f9fa;
+    --surface-low: #f3f4f5;
+    --surface-lowest: #ffffff;
+    --text: #191c1d;
+    --muted: #464555;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    print-color-adjust: exact;
+  }
+
+  .page-shell {
+    width: var(--page-width);
+    height: var(--page-height);
+    margin: 0 auto;
+    padding: 14mm 12mm 12mm;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 11mm;
+    height: 100%;
+  }
+
+  .hero {
+    max-width: 145mm;
+    margin-right: auto;      /* pin to the left edge */
+    text-align: left;
+  }
+
+  .hero h1 {
+    font-size: 2.8rem;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 800;
+    color: var(--text);
+    text-align: left;
+  }
+
+  /* WeasyPrint does not support background-clip: text.
+     Replaced gradient text with solid primary color. */
+  .hero .accent {
+    color: var(--primary);
+  }
+
+  .hero p {
+    max-width: 105mm;
+    margin-top: 5mm;
+    margin-right: auto;      /* pin to the left edge */
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 8mm;
+    align-items: start;
+  }
+
+  .feature-section {
+    display: flex;
+    flex-direction: column;
+    gap: 7mm;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6mm;
+  }
+
+  .feature-card,
+  .wide-card,
+  .service-panel,
+  .pricing-card {
+    border: 1px solid rgba(199, 196, 216, 0.32);
+    background: var(--surface-lowest);
+  }
+
+  .feature-card,
+  .wide-card {
+    border-radius: 4mm;
+    padding: 7mm;
+  }
+
+  .feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 11mm;
+    height: 11mm;
+    margin-bottom: 4mm;
+    border-radius: 999px;
+    background: rgba(53, 37, 205, 0.08);
+    color: var(--primary);
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .feature-card h3,
+  .wide-card h3 {
+    margin-bottom: 2mm;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .feature-card p,
+  .wide-card p,
+  .service-panel p,
+  .pricing-support,
+  .website-link {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .pricing-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8mm;
+    padding: 10mm 8mm;
+  }
+
+  .pricing-card::before {
+    content: "";
+    position: absolute;
+    top: -18mm;
+    right: -18mm;
+    width: 36mm;
+    height: 36mm;
+    border-radius: 50%;
+    background: rgba(53, 37, 205, 0.05);
+  }
+
+  .pricing-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .pill {
+    display: inline-block;
+    margin-bottom: 5mm;
+    padding: 1.5mm 4mm;
+    border-radius: 999px;
+    background: var(--primary-fixed);
+    color: #0f0069;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .pricing-card h2 {
+    margin-bottom: 2mm;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 2mm;
+    margin-bottom: 3mm;
+  }
+
+  .price {
+    font-size: 2.8rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .price-unit {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .pricing-highlight {
+    margin-bottom: 7mm;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .feature-list {
+    list-style: none;
+    margin-bottom: 8mm;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 3mm;
+    margin-bottom: 4mm;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .check {
+    width: 5mm;
+    height: 5mm;
+    margin-top: 0.5mm;
+    border-radius: 50%;
+    background: rgba(53, 37, 205, 0.12);
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .cta-button,
+  .service-button {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .cta-button {
+    width: 100%;
+    padding: 5mm 6mm;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+    color: #ffffff;
+    font-size: 1rem;
+  }
+
+  .pricing-support {
+    margin-top: 5mm;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .service-panel {
+    border-radius: 8mm;
+    padding: 9mm 10mm;
+  }
+
+  .service-content {
+    max-width: 160mm;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .service-content h2 {
+    margin-bottom: 4mm;
+    font-size: 1.9rem;
+    font-weight: 700;
+  }
+
+  .service-content p {
+    max-width: 132mm;
+    margin: 0 auto 6mm;
+    font-size: 0.95rem;
+  }
+
+  .service-button {
+    padding: 4.5mm 9mm;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: #ffffff;
+    font-size: 0.95rem;
+  }
+
+  .footer-link {
+    margin-top: auto;
+    padding-top: 6mm;
+    border-top: 1px solid rgba(199, 196, 216, 0.4);
+    text-align: center;
+  }
+
+  .website-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2mm;
+    text-decoration: none;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .website-link strong {
+    color: var(--text);
+  }
+
+  @media print {
+    body { background: #ffffff; }
+    .page-shell { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="layout">
+      <section class="hero">
+        <h1>
+          {{ hero_line_1 or "See how your hotel" }}<br/>
+          <span class="accent">{{ hero_line_2 or "really looks to AI" }}</span>
+        </h1>
+        <p>{{ hero_subtitle or "Stop missing out and start getting more bookings from new AI search tools." }}</p>
+      </section>
+
+      <section class="content-grid">
+        <div class="feature-section">
+          <div class="feature-grid">
+            {% for card in feature_cards or [
+              {'icon': '01', 'title': 'See where your hotel shows up online', 'body': 'We check how often your hotel appears when people search on AI platforms.'},
+              {'icon': '02', 'title': 'Find where you are missing customers', 'body': 'We show where your hotel is not being recommended -- but should be.'},
+              {'icon': '03', 'title': "What's wrong with your online presence", 'body': 'We identify issues in your website and content that stop you from getting bookings.'},
+              {'icon': '04', 'title': 'Exactly what to fix (step-by-step)', 'body': 'A clear plan you or your team can follow to improve visibility.'}
+            ] %}
+            <div class="feature-card {{ card.card_class or '' }}">
+              <span class="feature-icon">{{ card.icon or "05" }}</span>
+              <h3>{{ card.title or "N/A" }}</h3>
+              <p>{{ card.body or "N/A" }}</p>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="wide-card {{ search_card_class or '' }}">
+            <span class="feature-icon">{{ search_card_icon or "05" }}</span>
+            <h3>{{ search_card_title or "What customers are searching for" }}</h3>
+            <p>{{ search_card_body or "See the exact searches where your hotel should appear but doesn't." }}</p>
+          </div>
+        </div>
+
+        <aside class="pricing-card {{ pricing_card_class or '' }}">
+          <div class="pricing-content">
+            <span class="pill">{{ pricing_badge or "Popular Choice" }}</span>
+            <h2>{{ pricing_title or "Complete AI Visibility Report" }}</h2>
+            <div class="price-row">
+              <span class="price">$100</span>
+              <span class="price-unit">{{ pricing_unit or "/ per report" }}</span>
+            </div>
+            <p class="pricing-highlight">{{ pricing_highlight or "Get more foreign and high-value customers who are ready to book." }}</p>
+
+            <ul class="feature-list">
+              {% for item in pricing_features or [
+                'Full check of your hotel visibility',
+                'Comparison with competitors',
+                "What's missing and why",
+                'Clear actions to improve bookings'
+              ] %}
+              <li>
+                <span class="check">+</span>
+                <span>{{ item or "N/A" }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+
+            <a class="cta-button" href="{{ pricing_cta_url or '#' }}">{{ pricing_cta_label or "Get My Full Report" }}</a>
+            <p class="pricing-support">{{ pricing_support_text or "Secure Payment - Instant Access" }}</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="service-panel {{ service_panel_class or '' }}">
+        <div class="service-content">
+          <h2>{{ service_title or "Don't want to do it yourself?" }}</h2>
+          <p>{{ service_body or "Let us handle your online visibility. We'll improve your presence and help you get more high-value and foreign customers. You pay only after you start seeing results." }}</p>
+          <a class="service-button" href="{{ service_cta_url or 'https://zerochills.com' }}">{{ service_cta_label or "Let's Fix My Visibility" }}</a>
+        </div>
+      </section>
+
+      <section class="footer-link">
+        <a class="website-link" href="{{ website_url or 'https://zerochills.com' }}">
+          <span>{{ website_prefix or "Visit" }}</span>
+          <strong>{{ website_label or "zerochills.com" }}</strong>
+          <span>{{ website_suffix or "to learn more" }}</span>
+          <span>&#8594;</span>
+        </a>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

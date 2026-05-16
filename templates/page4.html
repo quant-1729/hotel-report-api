@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{{ page_title or "ZeroChills - Executive Summary" }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  :root {
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --primary: #3525cd;
+    --primary-soft: #6d5cf7;
+    --primary-line: #c4b5fd;
+    --neutral: #94a3b8;
+    --text: #0f172a;
+    --muted: #64748b;
+    --muted-soft: #94a3b8;
+    --paper: #ffffff;
+    --screen: #e8e8e8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: var(--screen);
+    color: var(--text);
+    print-color-adjust: exact;
+  }
+
+  .page-shell {
+    width: var(--page-width);
+    height: var(--page-height);
+    margin: 0 auto;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-shell::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: radial-gradient(circle, #e0e0f0 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .top-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #3525cd 0%, #6d5cf7 50%, #a78bfa 100%);
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: calc(297mm - 5px - 14mm);
+    padding: 9mm 13mm 8mm;
+    overflow: hidden;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--primary);
+  }
+
+  .logo-sub {
+    margin-top: 2px;
+    font-size: 0.52rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  .report-badge,
+  .page-num {
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 0.52rem;
+    font-weight: 600;
+  }
+
+  .report-badge {
+    display: inline-flex;
+    gap: 6px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--primary-soft);
+    background: #ede9ff;
+    border: 1px solid var(--primary-line);
+  }
+
+  .page-num {
+    color: var(--muted-soft);
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+  }
+
+  .title-block h1 {
+    font-size: 2.4rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .title-block p {
+    max-width: 480px;
+    margin-top: 5px;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  /* position: relative is required for the .stat-accent-bar child */
+  .stat-card {
+    position: relative;
+    overflow: hidden;
+    padding: 22px 22px 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  /* Replaces ::before pseudo-element — WeasyPrint cannot inherit CSS variables on pseudo-elements set via inline style */
+  .stat-accent-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+    /* background set via inline style per card */
+    background: var(--neutral);
+  }
+
+  .stat-label {
+    margin-bottom: 8px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-soft);
+  }
+
+  .stat-value {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .stat-big {
+    font-size: 2.8rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    /* color set via inline style per card */
+    color: var(--text);
+  }
+
+  .stat-denom {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted-soft);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    /* color set via inline style per card */
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* background set via inline style per card */
+    background: var(--neutral);
+  }
+
+  .progress-bar-wrap {
+    margin-top: 6px;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #e2e8f0;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #3525cd, #6d5cf7);
+    /* width set via inline style per card */
+    width: 0%;
+  }
+
+  .progress-label,
+  .sub-note {
+    font-size: 0.58rem;
+    line-height: 1.5;
+    color: var(--muted-soft);
+  }
+
+  .sub-note {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+
+  .findings-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 22px;
+    border: 1px solid #c7d2fe;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+  }
+
+  .findings-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3525cd, #6d5cf7);
+  }
+
+  .findings-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: #ffffff;
+  }
+
+  .findings-body h2 {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #1e293b;
+  }
+
+  .findings-body p {
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .findings-body strong {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .bottom-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    flex-shrink: 0;
+  }
+
+  .hotel-img {
+    position: relative;
+    width: 42%;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(160deg, #2c1a0e 0%, #1a1008 40%, #0d0804 100%);
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .hotel-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hotel-img-label {
+    position: relative;
+    z-index: 1;
+    padding: 10px 12px;
+    font-size: 0.55rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .pillar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #3d2210 0%, #2a1608 100%);
+  }
+
+  .recommendation {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .rec-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary-soft);
+  }
+
+  .rec-eyebrow .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary-soft);
+  }
+
+  .recommendation h3 {
+    margin-bottom: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .recommendation p {
+    font-size: 0.75rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .rec-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    margin-top: 12px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #3525cd, #6d5cf7);
+    color: #ffffff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .rec-cta svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bottom-banner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    height: 14mm;
+    background: linear-gradient(90deg, #2a1fb0 0%, #3525cd 50%, #4f46e5 100%);
+  }
+
+  .bottom-banner p,
+  .bottom-banner span {
+    font-size: 0.62rem;
+  }
+
+  .bottom-banner p {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .bottom-banner span {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  @media print {
+    body { background: #ffffff; }
+    .page-shell { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="top-bar"></div>
+
+    <div class="page-inner">
+      <header class="header">
+        <div>
+          <div class="logo-text">{{ brand_name or "ZeroChills" }}</div>
+          <div class="logo-sub">{{ brand_tagline or "AI Visibility Intelligence for Hotels" }}</div>
+        </div>
+        <div class="header-actions">
+          <span class="report-badge">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#6d5cf7" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <path d="M12 2L3 7v6c0 5.25 3.75 10.15 9 11.25C18.25 23.15 22 18.25 22 13V7L12 2z"/>
+            </svg>
+            {{ badge_label or "Executive Summary" }}
+          </span>
+          <span class="page-num">{{ page_label or "Page 02" }}</span>
+        </div>
+      </header>
+
+      <section class="title-block">
+        <h1>{{ summary_title or "Executive Summary" }}</h1>
+        <p>{{ summary_subtitle or "A critical analysis of how AI search engines and large language models perceive your digital footprint relative to the competitive landscape." }}</p>
+      </section>
+
+      <section class="stat-grid">
+        {% set executive_stats = executive_stats or [
+          {
+            'label': 'AI Visibility Score',
+            'value': ai_visibility_score if ai_visibility_score is not none else 'N/A',
+            'denominator': ai_visibility_denominator or '/ 100',
+            'card_class': score_class or 'danger',
+            'accent_color': score_accent_color or '#ef4444',
+            'value_color': score_value_color or '#ef4444',
+            'status_text': score_status_text or 'Critical Underperformance',
+            'status_color': score_status_color or '#ef4444',
+            'status_dot_color': score_status_dot_color or '#ef4444'
+          },
+          {
+            'label': 'Prompts Where You Were Mentioned',
+            'value': prompts_mentioned_count if prompts_mentioned_count is not none else 'N/A',
+            'denominator': prompts_mentioned_denominator or '/ 20',
+            'card_class': prompts_card_class or 'primary',
+            'accent_color': prompts_accent_color or '#3525cd',
+            'value_color': prompts_value_color or '#0f172a',
+            'progress_width': prompts_mentioned_percentage or '0',
+            'progress_label': prompts_progress_label or 'Only 20% mention rate across all tested prompts'
+          },
+          {
+            'label': 'Highest Competitor Score',
+            'value': top_competitor_score if top_competitor_score is not none else 'N/A',
+            'denominator': top_competitor_denominator or '/ 100',
+            'card_class': competitor_card_class or 'neutral',
+            'accent_color': competitor_accent_color or '#94a3b8',
+            'value_color': competitor_value_color or '#0f172a',
+            'note': competitor_note or 'Leading properties are securing strong coverage across high-intent citations.'
+          },
+          {
+            'label': 'Discovery Category Score',
+            'value': discovery_score if discovery_score is not none else 'N/A',
+            'denominator': discovery_denominator or '/ 100',
+            'card_class': discovery_card_class or 'warning',
+            'accent_color': discovery_accent_color or '#f59e0b',
+            'value_color': discovery_value_color or '#0f172a',
+            'status_text': discovery_status_text or 'Zero Mentions in organic Category Discovery',
+            'status_color': discovery_status_color or '#f59e0b',
+            'status_dot_color': discovery_status_dot_color or '#f59e0b'
+          }
+        ] %}
+        {% for stat in executive_stats %}
+        <div class="stat-card {{ stat.card_class or '' }}">
+          <div class="stat-accent-bar" style="background: {{ stat.accent_color or '#94a3b8' }};"></div>
+          <div class="stat-label">{{ stat.label or "N/A" }}</div>
+          <div class="stat-value">
+            <span class="stat-big" style="color: {{ stat.value_color or '#0f172a' }};">{{ stat.value if stat.value is not none else "N/A" }}</span>
+            <span class="stat-denom">{{ stat.denominator or "" }}</span>
+          </div>
+          {% if stat.progress_width is defined %}
+          <div class="progress-bar-wrap">
+            <div class="progress-track">
+              <div class="progress-fill" style="width: {{ stat.progress_width or 0 }}%;"></div>
+            </div>
+            <div class="progress-label">{{ stat.progress_label or "N/A" }}</div>
+          </div>
+          {% elif stat.note is defined %}
+          <div class="sub-note">{{ stat.note or "N/A" }}</div>
+          {% else %}
+          <div class="status-badge" style="color: {{ stat.status_color or '#64748b' }};">
+            <span class="status-dot" style="background: {{ stat.status_dot_color or '#94a3b8' }};"></span>
+            {{ stat.status_text or "N/A" }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </section>
+
+      <section class="findings-card">
+        <div class="findings-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9.5 2C7 2 5 4 5 6.5c0 .8.2 1.5.6 2.1C4.1 9.4 3 10.8 3 12.5 3 14.4 4.3 16 6 16.5V17c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-.5c1.7-.5 3-2.1 3-3.9 0-1.7-1-3.2-2.5-3.8.3-.6.5-1.3.5-2 0-2.5-2-4.5-4.5-4.5-.6 0-1.1.1-1.6.3C12.5 2.6 11.1 2 9.5 2z"/>
+          </svg>
+        </div>
+        <div class="findings-body">
+          <h2>{{ findings_heading or "Summary of Findings" }}</h2>
+          <p>
+            <strong>{{ hotel_name or "N/A" }}</strong> {{ findings_summary or "is currently underperforming across AI-driven travel discovery queries. This report identifies where your visibility is weakest and what needs to change to regain digital authority." }}
+          </p>
+        </div>
+      </section>
+
+      <section class="bottom-row">
+        <div class="hotel-img {{ hotel_image_card_class or '' }}">
+          {% if hotel_image_src %}
+          <img class="hotel-image" src="{{ hotel_image_src }}" alt="{{ hotel_image_alt or 'Hotel Interior' }}"/>
+          {% else %}
+          <div class="pillar" style="left: 18%;"></div>
+          <div class="pillar" style="left: 38%;"></div>
+          <div class="pillar" style="right: 28%;"></div>
+          <div class="pillar" style="right: 12%;"></div>
+          <div style="position:absolute; bottom:22%; left:10%; width:25%; height:16%; background:rgba(80,45,20,0.7); border-radius:6px 6px 3px 3px;"></div>
+          <div style="position:absolute; bottom:22%; right:12%; width:22%; height:14%; background:rgba(80,45,20,0.6); border-radius:6px 6px 3px 3px;"></div>
+          <div style="position:absolute; bottom:0; left:0; right:0; height:22%; background:linear-gradient(180deg, rgba(100,60,20,0.3) 0%, rgba(60,30,10,0.6) 100%);"></div>
+          {% endif %}
+          <span class="hotel-img-label">{{ hotel_image_label or "Hotel Interior" }}</span>
+        </div>
+
+        <div class="recommendation">
+          <div class="rec-eyebrow"><span class="dot"></span>{{ recommendation_eyebrow or "Key Recommendation" }}</div>
+          <h3>{{ recommendation_title_line_1 or "Optimize Your AI" }}<br/>{{ recommendation_title_line_2 or "Discovery Signals" }}</h3>
+          <p>{{ recommendation_text or "Implement a structured data schema and knowledge graph optimization strategy to ensure LLMs correctly categorize your property's unique value propositions and surface it in high-intent travel queries." }}</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-banner">
+      <p>{{ footer_left or "ZeroChills Competitive Intelligence" }}</p>
+      <span>{{ footer_right or "Page 02 / 08" }}</span>
+    </div>
+  </div>
+</body>
+</html>

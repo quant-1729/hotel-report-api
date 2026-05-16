@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{{ page_title or "ZeroChills - Competitor Analysis Report" }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  :root {
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --primary: #3525cd;
+    --surface-lowest: #ffffff;
+    --surface-low: #f3f4f5;
+    --surface-high: #e7e8e9;
+    --text: #191c1d;
+    --muted: #464555;
+    --error: #ba1a1a;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: #f8f9fa;
+    color: var(--text);
+    print-color-adjust: exact;
+  }
+
+  .page-shell {
+    width: var(--page-width);
+    height: var(--page-height);
+    margin: 0 auto;
+    padding: 24mm;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .page-title {
+    margin-bottom: 12mm;
+  }
+
+  .page-title h1 {
+    margin-bottom: 4mm;
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  .page-title p {
+    max-width: 120mm;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .section {
+    margin-bottom: 12mm;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+    margin-bottom: 6mm;
+  }
+
+  .section-header .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #777587;
+    white-space: nowrap;
+  }
+
+  .section-header .line {
+    flex: 1;
+    height: 1px;
+    background: var(--surface-high);
+  }
+
+  .scoreboard {
+    display: flex;
+    flex-direction: column;
+    gap: 3mm;
+  }
+
+  .score-row {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 5mm;
+    border-radius: 4mm;
+    /* background is set via inline style per competitor */
+    background: #ffffff;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .rank-bg {
+    position: absolute;
+    top: -3mm;
+    left: -3mm;
+    font-size: 3.75rem;
+    font-weight: 900;
+    line-height: 1;
+    /* color is set via inline style per competitor */
+    color: #edeeef;
+    opacity: 0.5;
+  }
+
+  .score-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 8mm;
+  }
+
+  .property-meta {
+    width: 33%;
+    padding-right: 4mm;
+  }
+
+  .property-meta h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    /* color is set via inline style per competitor */
+    color: var(--text);
+  }
+
+  .property-meta p {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .score-track-wrap {
+    flex: 1;
+    padding: 0 8mm;
+  }
+
+  .score-track {
+    width: 100%;
+    height: 2mm;
+    overflow: hidden;
+    border-radius: 999px;
+    /* background is set via inline style per competitor */
+    background: #edeeef;
+  }
+
+  .score-fill {
+    height: 100%;
+    /* width and background are set via inline style per competitor */
+    width: 0%;
+    background: var(--primary);
+  }
+
+  .score-summary {
+    width: 48mm;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6mm;
+    text-align: right;
+  }
+
+  .score-badge {
+    padding: 1mm 3mm;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    /* background is set via inline style per competitor */
+    background: var(--surface-high);
+  }
+
+  .score-number {
+    font-size: 2rem;
+    font-weight: 900;
+    /* color is set via inline style per competitor */
+    color: var(--primary);
+  }
+
+  .score-number span {
+    font-size: 0.75rem;
+    opacity: 0.5;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6mm;
+  }
+
+  .metric-card {
+    padding: 6mm;
+    /* border-left-color is set via inline style per card */
+    border-left: 4px solid var(--primary);
+    border-radius: 4mm;
+    background: var(--surface-lowest);
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .metric-label {
+    display: block;
+    margin-bottom: 4mm;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .metric-value {
+    margin-bottom: 2mm;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--primary);
+  }
+
+  .metric-body {
+    margin-bottom: 4mm;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .metric-footnote {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--error);
+  }
+
+  .closing-panel {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10mm;
+    padding: 8mm;
+    border-radius: 6mm;
+    background: rgba(53, 37, 205, 0.05);
+  }
+
+  .closing-visual {
+    width: 33%;
+    flex-shrink: 0;
+  }
+
+  .closing-visual svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .closing-copy {
+    flex: 1;
+  }
+
+  .closing-copy h2 {
+    margin-bottom: 3mm;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .closing-copy p {
+    margin-bottom: 6mm;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .closing-metrics {
+    display: flex;
+    gap: 8mm;
+  }
+
+  .closing-metrics span {
+    display: block;
+  }
+
+  .closing-metrics .label {
+    margin-bottom: 1mm;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+
+  .closing-metrics .value {
+    font-size: 1.2rem;
+    font-weight: 900;
+  }
+
+  @media print {
+    body { background: #ffffff; }
+    .page-shell { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-shell">
+    <section class="page-title">
+      <h1>{{ analysis_title or "Competitor Analysis" }}</h1>
+      <p>{{ analysis_subtitle or "How the top properties in your market are winning AI-driven guests -- and what it's costing you." }}</p>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="label">{{ scoreboard_label or "AI Visibility Scores" }}{% if market_name %} -- {{ market_name }}{% endif %}</span>
+        <div class="line"></div>
+      </div>
+      <div class="scoreboard">
+        {% for competitor in competitors or [
+          {'rank': '01', 'name': 'The Oberoi Mumbai', 'segment': 'Luxury Sector Leader', 'score': 71, 'score_label': 'Appears in 16/20 prompts', 'fill_color': '#3525cd', 'score_color': '#3525cd', 'width': 71, 'row_background': '#ffffff', 'badge_background': '#e7e8e9', 'rank_color': '#edeeef', 'property_name_color': '#191c1d'},
+          {'rank': '02', 'name': 'Taj Mahal Palace', 'segment': 'Heritage Authority', 'score': 68, 'score_label': 'Strong discovery visibility', 'fill_color': '#4f46e5', 'score_color': '#4f46e5', 'width': 68, 'row_background': '#ffffff', 'badge_background': '#e7e8e9', 'rank_color': '#edeeef', 'property_name_color': '#191c1d'},
+          {'rank': '03', 'name': 'ITC Maratha', 'segment': 'Corporate Preference', 'score': 55, 'score_label': 'Weak on occasion queries', 'fill_color': '#c0c7d6', 'score_color': '#585f6c', 'width': 55, 'row_background': '#ffffff', 'badge_background': '#e7e8e9', 'rank_color': '#edeeef', 'property_name_color': '#191c1d'},
+          {'rank': '04', 'name': 'Sahara Star', 'segment': 'Airport Micro-market', 'score': 48, 'score_label': 'Improving visibility', 'fill_color': '#c7c4d8', 'score_color': '#777587', 'width': 48, 'row_background': '#ffffff', 'badge_background': '#e7e8e9', 'rank_color': '#edeeef', 'property_name_color': '#191c1d'},
+          {'rank': '05', 'name': hotel_name or 'Subject Property', 'segment': subject_segment or 'Subject Property', 'score': ai_visibility_score or 34, 'score_label': subject_score_label or 'Invisible for discovery', 'fill_color': '#ba1a1a', 'score_color': '#ba1a1a', 'width': ai_visibility_score or 34, 'row_background': 'rgba(255,218,214,0.2)', 'badge_background': '#ffdad6', 'rank_color': '#ffdad6', 'property_name_color': '#ba1a1a'}
+        ] %}
+        <div class="score-row {{ competitor.row_class or '' }}" style="background: {{ competitor.row_background or '#ffffff' }};">
+          <span class="rank-bg" style="color: {{ competitor.rank_color or '#edeeef' }};">{{ competitor.rank or "N/A" }}</span>
+          <div class="score-content">
+            <div class="property-meta">
+              <h3 style="color: {{ competitor.property_name_color or '#191c1d' }};">{{ competitor.name or "N/A" }}</h3>
+              <p>{{ competitor.segment or "N/A" }}</p>
+            </div>
+            <div class="score-track-wrap">
+              <div class="score-track" style="background: {{ competitor.track_background or '#edeeef' }};">
+                <div class="score-fill" style="width: {{ competitor.width or 0 }}%; background: {{ competitor.fill_color or '#3525cd' }};"></div>
+              </div>
+            </div>
+            <div class="score-summary">
+              <span class="score-badge" style="background: {{ competitor.badge_background or '#e7e8e9' }};">{{ competitor.score_label or "N/A" }}</span>
+              <span class="score-number" style="color: {{ competitor.score_color or '#3525cd' }};">{{ competitor.score or "N/A" }}<span>{{ competitor.score_suffix or "/100" }}</span></span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-header">
+        <span class="label">{{ revenue_gap_label or "What This Visibility Gap Is Worth" }}</span>
+        <div class="line"></div>
+      </div>
+      <div class="metrics-grid">
+        {% for metric in revenue_metrics or [
+          {'label': 'Market Leader Advantage', 'value': '+37 pts', 'body': 'The market leader scores 37 points higher across general intent prompts.', 'footnote': "That's 12 more prompts where they are the #1 recommendation.", 'accent_color': '#3525cd'},
+          {'label': 'Guest Differential', 'value': '~28 Guests', 'body': 'Properties scoring 70+ receive materially more direct booking intent clicks.', 'footnote': 'At your average nightly rate, that gap compounds quickly.', 'accent_color': '#3525cd'},
+          {'label': 'Annual Revenue at Stake', 'value': 'Rs.40L+', 'body': 'A conservative estimate based on current AI search volume growth.', 'footnote': 'This gap widens as AI adoption grows.', 'accent_color': '#3525cd'}
+        ] %}
+        <div class="metric-card {{ metric.card_class or '' }}" style="border-left-color: {{ metric.accent_color or '#3525cd' }};">
+          <span class="metric-label">{{ metric.label or "N/A" }}</span>
+          <div class="metric-value">{{ metric.value or "N/A" }}</div>
+          <p class="metric-body">{{ metric.body or "N/A" }}</p>
+          <p class="metric-footnote">{{ metric.footnote or "N/A" }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

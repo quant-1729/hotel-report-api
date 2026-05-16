@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>{{ page_title or "Visibility Audit - Prompt-by-Prompt Results" }}</title>
+<style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  :root {
+    --page-width: 210mm;
+    --page-height: 297mm;
+    --primary: #3525cd;
+    --surface: #f8f9fa;
+    --surface-low: #f3f4f5;
+    --surface-lowest: #ffffff;
+    --surface-high: #e7e8e9;
+    --text: #191c1d;
+    --muted: #464555;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    print-color-adjust: exact;
+  }
+
+  .page-shell {
+    position: relative;
+    width: var(--page-width);
+    height: var(--page-height);
+    margin: 0 auto;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .page-inner {
+    height: 100%;
+    padding: 12mm 12mm 10mm;
+  }
+
+  .title-block {
+    margin-bottom: 4mm;
+  }
+
+  .title-block h1 {
+    margin-bottom: 2mm;
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .content-wrap {
+    position: relative;
+    height: calc(297mm - 32mm);
+  }
+
+  /* Heavy fade — strong at the bottom, soft at the very top so the title
+     stays partially readable but body content below is unreadable. */
+  .overlay-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.65) 10%,
+      rgba(255, 255, 255, 0.85) 22%,
+      rgba(255, 255, 255, 0.95) 40%,
+      rgba(255, 255, 255, 0.98) 100%
+    );
+  }
+
+  .overlay-mask.is-hidden {
+    display: none;
+  }
+
+  /* Blur the actual body content so even if the overlay weren't there,
+     the text would still be unreadable. The title lives OUTSIDE
+     .content-wrap, so it stays crisp. */
+  .content-layer {
+    position: relative;
+    z-index: 1;
+    filter: blur(5px);
+  }
+
+  /* Tiny blur on the page title keeps it "teaser"-readable. */
+  .content-wrap .overlay-title {
+    filter: blur(0.6px);
+  }
+
+  .subtitle {
+    max-width: 120mm;
+    margin-bottom: 8mm;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .table-card {
+    overflow: hidden;
+    border: 1px solid rgba(199, 196, 216, 0.4);
+    border-radius: 4mm;
+    background: var(--surface-lowest);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  thead tr {
+    background: var(--surface-low);
+  }
+
+  th, td {
+    vertical-align: top;
+  }
+
+  th {
+    padding: 3mm 3.5mm;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  td {
+    padding: 3mm 3.5mm;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(199, 196, 216, 0.28);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .col-index {
+    width: 9mm;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .col-category {
+    width: 24mm;
+    font-weight: 700;
+  }
+
+  .col-prompt {
+    width: auto;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .col-platform {
+    width: 17mm;
+    text-align: center;
+  }
+
+  .col-score {
+    width: 20mm;
+    text-align: right;
+    font-weight: 800;
+  }
+
+  .row-positive {
+    background: rgba(34, 197, 94, 0.08);
+    box-shadow: inset 4px 0 0 #10b981;
+  }
+
+  .row-negative {
+    background: rgba(244, 63, 94, 0.08);
+    box-shadow: inset 4px 0 0 #f43f5e;
+  }
+
+  .row-neutral {
+    background: #ffffff;
+  }
+
+  .tone-positive {
+    color: #047857;
+    font-weight: 700;
+  }
+
+  .tone-negative {
+    color: #94a3b8;
+    font-weight: 600;
+  }
+
+  .tone-alert {
+    color: #991b1b;
+    font-weight: 700;
+  }
+
+  tfoot tr {
+    background: var(--surface-high);
+  }
+
+  tfoot td {
+    padding: 4mm 3.5mm;
+    font-weight: 800;
+    border-bottom: none;
+  }
+
+  .footer-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6mm;
+    margin-top: 4mm;
+  }
+
+  .legend {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.8;
+    color: #94a3b8;
+  }
+
+  .analysis-note {
+    max-width: 52mm;
+    font-size: 10px;
+    text-align: right;
+    line-height: 1.6;
+    color: rgba(70, 69, 85, 0.6);
+  }
+
+  .summary-card {
+    position: relative;
+    overflow: hidden;
+    margin-top: 10mm;
+    padding: 6mm;
+    border: 1px solid rgba(199, 196, 216, 0.3);
+    border-radius: 4mm;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .summary-card::before {
+    content: "";
+    position: absolute;
+    top: -16mm;
+    right: -16mm;
+    width: 32mm;
+    height: 32mm;
+    border-radius: 50%;
+    background: rgba(53, 37, 205, 0.05);
+  }
+
+  .summary-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8mm;
+  }
+
+  .summary-item span {
+    display: block;
+  }
+
+  .summary-label {
+    margin-bottom: 1mm;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+
+  .summary-item p {
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+
+  @media print {
+    body { background: #ffffff; }
+    .page-shell { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-shell">
+    <main class="page-inner">
+      <div class="title-block">
+        <h1>{{ audit_title or "Where Your Hotel Is Losing Visibility -- And Why" }}</h1>
+      </div>
+
+      <div class="content-wrap">
+        <div class="overlay-mask {% if not preview_mask_enabled %}is-hidden{% endif %}"></div>
+        <div class="content-layer">
+          <p class="subtitle">{{ audit_subtitle or "A comprehensive audit across leading large language models to determine share of voice and recommendation frequency for specific search intent categories." }}</p>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-index">#</th>
+                  <th class="col-category">Category</th>
+                  <th class="col-prompt">Prompt Intent</th>
+                  <th class="col-platform">ChatGPT</th>
+                  <th class="col-platform">Gemini</th>
+                  <th class="col-platform">Perplexity</th>
+                  <th class="col-platform">Claude</th>
+                  <th class="col-score">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in prompt_results or [
+                  {'index': '01', 'category': 'Luxury', 'prompt': '"Best boutique hotels with a spa?"', 'chatgpt': 'Top', 'gemini': 'Mid', 'perplexity': 'Top', 'claude': 'No', 'score': '3 / 5', 'row_class': 'row-positive', 'category_class': 'tone-positive', 'score_class': 'tone-positive'},
+                  {'index': '02', 'category': 'Family', 'prompt': '"Kid-friendly stays near the city center."', 'chatgpt': 'No', 'gemini': 'No', 'perplexity': 'No', 'claude': 'No', 'score': '0 / 5', 'row_class': 'row-negative', 'category_class': 'tone-alert', 'score_class': 'tone-alert'},
+                  {'index': '03', 'category': 'Business', 'prompt': '"Quiet hotels with fast WiFi."', 'chatgpt': 'Low', 'gemini': 'Top', 'perplexity': 'No', 'claude': 'Top', 'score': '4 / 5', 'row_class': 'row-positive', 'category_class': 'tone-positive', 'score_class': 'tone-positive'},
+                  {'index': '04', 'category': 'Budget', 'prompt': '"Affordable stays under the target nightly rate."', 'chatgpt': 'No', 'gemini': 'No', 'perplexity': 'No', 'claude': 'No', 'score': '0 / 5', 'row_class': 'row-negative', 'category_class': 'tone-alert', 'score_class': 'tone-alert'},
+                  {'index': '05', 'category': 'Pet-Friendly', 'prompt': '"Where can I stay with a large dog?"', 'chatgpt': 'Mid', 'gemini': 'No', 'perplexity': 'Mid', 'claude': 'No', 'score': '2 / 5', 'row_class': 'row-positive', 'category_class': 'tone-positive', 'score_class': 'tone-positive'}
+                ] %}
+                <tr class="{{ row.row_class or 'row-neutral' }}">
+                  <td class="col-index">{{ row.index or "N/A" }}</td>
+                  <td class="col-category {{ row.category_class or '' }}">{{ row.category or "N/A" }}</td>
+                  <td class="col-prompt">{{ row.prompt or "N/A" }}</td>
+                  <td class="col-platform {{ row.chatgpt_class or '' }}">{{ row.chatgpt or "N/A" }}</td>
+                  <td class="col-platform {{ row.gemini_class or '' }}">{{ row.gemini or "N/A" }}</td>
+                  <td class="col-platform {{ row.perplexity_class or '' }}">{{ row.perplexity or "N/A" }}</td>
+                  <td class="col-platform {{ row.claude_class or '' }}">{{ row.claude or "N/A" }}</td>
+                  <td class="col-score {{ row.score_class or '' }}">{{ row.score or "N/A" }}</td>
+                </tr>
+                {% endfor %}
+                {% if teaser_rows_label %}
+                <tr class="row-neutral">
+                  <td colspan="8" style="text-align:center; font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.16em; font-style:italic;">{{ teaser_rows_label }}</td>
+                </tr>
+                {% endif %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="7" style="text-align:right; text-transform:uppercase; letter-spacing:0.14em; color:#464555;">{{ aggregated_score_label or "Aggregated Visibility Score" }}</td>
+                  <td class="col-score" style="font-size:1.1rem; color:#3525cd;">{{ aggregated_visibility_score or "34 / 100" }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="footer-meta">
+            <p class="legend">{{ legend_text or "Top = highest visibility &middot; Mid = moderate &middot; Low = buried &middot; No = not mentioned" }}</p>
+            <div class="analysis-note">{{ analysis_note or "Analysis performed using production model APIs and standardized prompt sets." }}</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-grid">
+              {% for item in blur_summary_items or [
+                {'label': 'Key Insight', 'text': 'Visibility is strongest in wellness and luxury intents, dropping sharply for family and budget queries.'},
+                {'label': 'Top Platform', 'text': 'One platform currently serves the highest citation volume for your brand relative to peers.'},
+                {'label': 'Critical Action', 'text': 'Focus structured data optimization on high-conversion attributes to capture missed search demand.'}
+              ] %}
+              <div class="summary-item">
+                <span class="summary-label">{{ item.label or "N/A" }}</span>
+                <p>{{ item.text or "N/A" }}</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
