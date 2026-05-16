@@ -32,10 +32,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 app = FastAPI(title="Hotel AI Report Generator API")
 
-ALLOWED_ORIGINS = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,https://www.zerochills.com,https://zerochills.com",
-).split(",")
+# Always include core origins; env var adds extras
+_BASE_ORIGINS = [
+    "http://localhost:3000",
+    "https://www.zerochills.com",
+    "https://zerochills.com",
+]
+_extra = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = list({o.strip() for o in (_BASE_ORIGINS + _extra.split(",")) if o.strip()})
 
 app.add_middleware(
     CORSMiddleware,
